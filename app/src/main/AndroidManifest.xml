@@ -9,8 +9,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MyNotes">
-        <activity android:name=".activities.NoteActivity"
-            android:parentActivityName=".activities.NoteListActivity"></activity>
+        <activity android:name=".activities.NoteActivity"></activity>
         <activity android:name=".activities.NoteListActivity" />
         <activity android:name=".activities.SplashActivity">
             <intent-filter>

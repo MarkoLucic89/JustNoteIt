@@ -4,10 +4,14 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.GestureDetector;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
 import android.widget.Toast;
 
 import com.example.mynotes.R;
@@ -20,7 +24,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-public class NoteActivity extends AppCompatActivity implements DialogDeleteNote.DeleteNoteListener {
+public class NoteActivity extends AppCompatActivity implements
+        DialogDeleteNote.DeleteNoteListener {
 
     private ActivityNoteBinding binding;
     private NoteViewModel noteViewModel;
@@ -30,6 +35,7 @@ public class NoteActivity extends AppCompatActivity implements DialogDeleteNote.
     private Note noteFromIntent;
     private Intent intent;
     private boolean isNewNote;
+    private boolean isEditModeEnabled;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +46,36 @@ public class NoteActivity extends AppCompatActivity implements DialogDeleteNote.
         setValuesFromIntent();
         setViewModel();
         setListeners();
+        editMode();
+    }
+
+    private void viewMode() {
+        if (!getNoteValues()) {
+            return;
+        }
+        isEditModeEnabled = false;
+        binding.editTextTitle.setEnabled(false);
+        binding.editTextDescription.setEnabled(false);
+        binding.imageViewGreen.setEnabled(false);
+        binding.imageViewOrange.setEnabled(false);
+        binding.imageViewRed.setEnabled(false);
+        binding.imageViewBackToolbarNoteActivity.setImageResource(R.drawable.ic_baseline_arrow_back_24);
+        binding.imageViewModeNoteActivity.setImageResource(R.drawable.ic_baseline_edit_24);
+        binding.editTextTitle.setBackgroundResource(R.color.dark_grey);
+        binding.editTextDescription.setBackgroundResource(R.color.dark_grey);
+    }
+
+    private void editMode() {
+        isEditModeEnabled = true;
+        binding.editTextTitle.setEnabled(true);
+        binding.editTextDescription.setEnabled(true);
+        binding.imageViewGreen.setEnabled(true);
+        binding.imageViewOrange.setEnabled(true);
+        binding.imageViewRed.setEnabled(true);
+        binding.imageViewBackToolbarNoteActivity.setImageResource(R.drawable.ic_baseline_check_24);
+        binding.imageViewModeNoteActivity.setImageResource(R.drawable.ic_view_mode);
+        binding.editTextTitle.setBackgroundResource(R.drawable.background_rectangle_grey);
+        binding.editTextDescription.setBackgroundResource(R.drawable.background_rectangle_grey);
     }
 
     private void checkIsNewNote() {
@@ -50,6 +86,7 @@ public class NoteActivity extends AppCompatActivity implements DialogDeleteNote.
     private void setValuesFromIntent() {
         if (isNewNote) {
             setPriority("1");
+            binding.imageViewDeleteToolbarNoteActivity.setVisibility(View.GONE);
         } else {
             noteFromIntent = (Note) intent.getSerializableExtra(NoteListActivity.NOTE_FROM_NOTE_LIST_ACTIVITY);
             binding.editTextTitle.setText(noteFromIntent.getNoteTitle());
@@ -69,10 +106,28 @@ public class NoteActivity extends AppCompatActivity implements DialogDeleteNote.
     }
 
     private void setListeners() {
-        binding.floatingActionButtonSaveNote.setOnClickListener(v -> saveNote());
         binding.imageViewGreen.setOnClickListener(v -> setPriority("1"));
         binding.imageViewOrange.setOnClickListener(v -> setPriority("2"));
         binding.imageViewRed.setOnClickListener(v -> setPriority("3"));
+        binding.imageViewBackToolbarNoteActivity.setOnClickListener(v -> backMethod());
+        binding.imageViewDeleteToolbarNoteActivity.setOnClickListener(v -> showDialogDeleteNote());
+        binding.imageViewModeNoteActivity.setOnClickListener(v -> setMode());
+    }
+
+    private void setMode() {
+        if (isEditModeEnabled) {
+            viewMode();
+        } else {
+            editMode();
+        }
+    }
+
+    private void backMethod() {
+        if (isEditModeEnabled) {
+            viewMode();
+        } else {
+            saveNote();
+        }
     }
 
     private void saveNote() {
@@ -96,8 +151,8 @@ public class NoteActivity extends AppCompatActivity implements DialogDeleteNote.
     }
 
     private void insertNote() {
-            Note newNote = new Note(title, description, date, priority);
-            noteViewModel.insertNote(newNote);
+        Note newNote = new Note(title, description, date, priority);
+        noteViewModel.insertNote(newNote);
         Toast.makeText(this, "note " + title + " successfully inserted", Toast.LENGTH_SHORT).show();
         finish();
     }
@@ -130,46 +185,22 @@ public class NoteActivity extends AppCompatActivity implements DialogDeleteNote.
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.options_menu_note_activity, menu);
-        return super.onCreateOptionsMenu(menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.optionsItemDeleteNote:
-                showDialogDeleteNote();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
-
     private void showDialogDeleteNote() {
         DialogDeleteNote dialogDeleteNote = new DialogDeleteNote();
         dialogDeleteNote.show(getSupportFragmentManager(), null);
     }
 
     @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        if (isNewNote) {
-            menu.removeItem(R.id.optionsItemDeleteNote);
-        }
-        return super.onPrepareOptionsMenu(menu);
+    public void onDeleteNote() {
+        noteViewModel.deleteNote(noteFromIntent);
+        Toast.makeText(this, "Note " + noteFromIntent.getNoteTitle() + " deleted", Toast.LENGTH_SHORT).show();
+        finish();
     }
 
     @Override
     public void onBackPressed() {
         super.onBackPressed();
-        saveNote();
+        backMethod();
     }
 
-    @Override
-    public void onDeleteNote() {
-        noteViewModel.deleteNote(noteFromIntent);
-        Toast.makeText(this, "Note deleted", Toast.LENGTH_SHORT).show();
-        finish();
-    }
 }

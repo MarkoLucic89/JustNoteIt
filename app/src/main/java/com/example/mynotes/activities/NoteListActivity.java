@@ -12,6 +12,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import com.example.mynotes.R;
 import com.example.mynotes.adapters.NotesAdapter;
@@ -32,6 +33,9 @@ public class NoteListActivity extends AppCompatActivity implements
     private NoteViewModel noteViewModel;
     private NotesAdapter notesAdapter;
     private List<Note> notes;
+    private List<Note> selectedNotes;
+
+    private boolean isActionMode;
 
 
     @Override
@@ -39,12 +43,32 @@ public class NoteListActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-        notes = new ArrayList<>();
+        initLists();
         initViewModel();
         initRecyclerView();
         notesObserver();
         setSearchView();
         binding.floatingActionButtonAddNote.setOnClickListener(v -> goToNoteActivity());
+//        disableActionMode();
+    }
+
+    private void initLists() {
+        notes = new ArrayList<>();
+        selectedNotes = new ArrayList<>();
+    }
+
+    private void disableActionMode() {
+        isActionMode = false;
+        binding.imageViewBackToolbarNoteListActivity.setVisibility(View.GONE);
+        binding.imageViewDeleteToolbarNoteListActivity.setVisibility(View.GONE);
+        binding.textViewSelectedToolbarNoteListActivity.setVisibility(View.GONE);
+    }
+
+    private void enableActionMode() {
+        isActionMode = true;
+        binding.imageViewBackToolbarNoteListActivity.setVisibility(View.VISIBLE);
+        binding.imageViewDeleteToolbarNoteListActivity.setVisibility(View.VISIBLE);
+        binding.textViewSelectedToolbarNoteListActivity.setVisibility(View.VISIBLE);
     }
 
     private void setSearchView() {
