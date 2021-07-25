@@ -3,6 +3,8 @@ package com.example.mynotes.adapters;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -17,11 +19,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NotesViewHolder> {
+    private static final String SELECT_ALL = "select_all_notes";
+    private static final String UNSELECT_ALL = "unselect_all_notes";
     private List<Note> notes = new ArrayList<>();
-    private OnNoteClickListener onNoteClickListener;
+    private NoteAdapterListener noteAdapterListener;
+    private boolean isActionMode;
+    private String checkNotes;
 
-    public NotesAdapter(OnNoteClickListener onNoteClickListener) {
-        this.onNoteClickListener = onNoteClickListener;
+    public NotesAdapter(NoteAdapterListener noteAdapterListener) {
+        this.noteAdapterListener = noteAdapterListener;
     }
 
     @NonNull
@@ -50,6 +56,32 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NotesViewHol
                 break;
         }
 
+        if (noteAdapterListener.onCheckActionMode()) {
+            holder.checkBoxItemSelect.setVisibility(View.VISIBLE);
+        } else {
+            holder.checkBoxItemSelect.setVisibility(View.GONE);
+            holder.checkBoxItemSelect.setChecked(false);
+        }
+
+        if (checkNotes != null) {
+            switch (checkNotes) {
+                case SELECT_ALL:
+                    holder.checkBoxItemSelect.setChecked(true);
+                    break;
+                case UNSELECT_ALL:
+                    holder.checkBoxItemSelect.setChecked(false);
+            }
+        }
+    }
+
+    public void selectAllNotes() {
+        checkNotes = SELECT_ALL;
+        notifyDataSetChanged();
+    }
+
+    public void unselectAllNotes() {
+        checkNotes = UNSELECT_ALL;
+        notifyDataSetChanged();
     }
 
     @Override
@@ -71,18 +103,42 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NotesViewHol
         TextView textViewItemDescription;
         TextView textViewItemDate;
         View viewItemPriority;
+        CheckBox checkBoxItemSelect;
 
         public NotesViewHolder(@NonNull @NotNull View itemView) {
             super(itemView);
+            initViews(itemView);
+            setListeners(itemView);
+        }
+
+        private void initViews(View itemView) {
             textViewItemTitle = itemView.findViewById(R.id.textViewItemTitle);
             textViewItemDescription = itemView.findViewById(R.id.textViewItemDescription);
             textViewItemDate = itemView.findViewById(R.id.textViewItemDate);
             viewItemPriority = itemView.findViewById(R.id.viewItemPriority);
-            itemView.setOnClickListener(v -> onNoteClickListener.setOnNoteClickListener(getAdapterPosition()));
+            checkBoxItemSelect = itemView.findViewById(R.id.checkBoxItemSelect);
+        }
+
+        private void setListeners(View itemView) {
+            itemView.setOnClickListener(v -> noteAdapterListener.onNoteClick(getAdapterPosition()));
+            itemView.setOnLongClickListener(v -> {
+                noteAdapterListener.onNoteLongClick();
+                notifyDataSetChanged();
+                return true;
+            });
+            checkBoxItemSelect.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                noteAdapterListener.onNoteCheck(isChecked, getAdapterPosition());
+            });
         }
     }
 
-    public interface OnNoteClickListener {
-        void setOnNoteClickListener(int position);
+    public interface NoteAdapterListener {
+        void onNoteClick(int position);
+
+        void onNoteLongClick();
+
+        boolean onCheckActionMode();
+
+        void onNoteCheck(boolean isChecked, int position);
     }
 }

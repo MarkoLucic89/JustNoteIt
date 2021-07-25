@@ -14,7 +14,6 @@ public class SplashActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
-//        getSupportActionBar().hide();
         goToMainActivity();
     }
 
@@ -22,6 +21,6 @@ public class SplashActivity extends AppCompatActivity {
         new Handler().postDelayed(() -> {
             startActivity(new Intent(this, NoteListActivity.class));
             finish();
-        }, 200);
+        }, 3000);
     }
 }
